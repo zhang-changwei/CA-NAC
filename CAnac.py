@@ -10,7 +10,8 @@ from vaspwfc import vaspwfc
 from aeolap import PawProj_info,ae_aug_olap_martrix,test,realtime_checking
 from spinorb import read_cproj_NormalCar
 
-SOFTWARE = 'SIESTA'  # VASP    | SIESTA          | HAMNET | ABACUS
+is_soc = False
+SOFTWARE = 'VASP'  # VASP    | SIESTA          | HAMNET | ABACUS
 WAVECAR  = 'WAVECAR' # WAVECAR | Sys.fullBZ.WFSX | ''     | ''
 if SOFTWARE == 'SIESTA':
     from siestawfc import siestawfc
@@ -421,7 +422,10 @@ def tdolap_from_vaspwfc(dirA, dirB, paw_info=None, is_alle=False,
             SK = np.load(os.path.join(dirA, 'tdoverlap.npy'))
         except:
             raise IOError('Cannot open %s file.' % os.path.join(dirA, 'tdoverlap.npy'))
-        td_olap = np.einsum('mi, ij, nj -> mn', cio_t.conj(), SK, cio_t)
+        if is_soc:
+            identity = np.identity(2, dtype=np.float32)
+            SK = np.kron(SK, identity)
+        td_olap = np.einsum('mi, ij, nj -> mn', cio_t.conj(), SK, cio_tdt)
     
     if OntheflyVerify & is_alle:
         S_olap = np.dot(cio_t.conj(),np.transpose(cio_t))
@@ -449,8 +453,9 @@ def tdolap_from_vaspwfc(dirA, dirB, paw_info=None, is_alle=False,
     EnT = phi_i._bands[ispin-1, ikpt-1, bmin_s-1:bmax_s]
     
     # close the wavecar
-    phi_i._wfc.close()
-    phi_j._wfc.close()
+    if SOFTWARE == 'VASP' or SOFTWARE == 'SIESTA':
+        phi_i._wfc.close()
+        phi_j._wfc.close()
     
 
     return EnT, td_olap

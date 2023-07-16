@@ -1,9 +1,18 @@
 import numpy as np
 import os
 
-def dummy(): pass
 
 class hamnetwfc(object):
+  '''
+  @property: _wfc: ndarray. shape: (nbands, nbands). store all coefficients here!
+  @property: _nkpts: int. 1
+  @property: _lgam: bool. True
+  @property: _nspin: int. 1
+  @property: _nbands: int
+  @property: _nplws: list[int]. shape: (nkpt, nbands). wfc coefficient number for each kpoint.
+  @property: _kvecs: ndarray[float]. shape: (nkpt, 3)
+  @property: _bands: ndarray[float64]. shape: (nspin, nkpt, nbands). band energy.
+  '''
 
   def __init__(self, dir:str) -> None:
     '''
@@ -28,15 +37,14 @@ class hamnetwfc(object):
     return True if self._lgam else False
   
   def readWF(self):
-    self._wfc:np.ndarray = np.load(self._fname) # shape: (nbands, nbands)
-    self._wfc.close = dummy
+    self._wfc:np.ndarray = np.lib.format.open_memmap(self._fname, mode='r') # shape: (nbands, nbands)
     self._nkpts = 1
     self._nspin = 1
     self._nbands = self._wfc.shape[1]
     self._nplws = [self._wfc.shape[1]]*self._nkpts
     self._kvecs = np.zeros((self._nkpts, 3), dtype=float)
     # energy
-    self._bands = np.load(self._ename).reshape(self._nspin, self._nkpts, -1) # shape: (nspin, nkpts, nbands)
+    self._bands = np.lib.format.open_memmap(self._ename, mode='r').reshape(self._nspin, self._nkpts, -1) # shape: (nspin, nkpts, nbands)
 
   def readBandCoeff(self, ispin=1, ikpt=1, iband=1, norm=False):
     '''
@@ -44,8 +52,8 @@ class hamnetwfc(object):
     '''
     self.checkIndex(ispin, ikpt, iband)
     cg = self._wfc[iband-1]
-    if norm:
-        cg /= np.linalg.norm(cg)
+    # if norm:
+    #     cg /= np.linalg.norm(cg)
     return cg
 
   def checkIndex(self, ispin, ikpt, iband):
