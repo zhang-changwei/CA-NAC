@@ -57,7 +57,7 @@ class abacuswfc(object):
     norb = int(_wfnm.readline().split()[0])
     if not hasattr(s, '_nbands'):
       s._nbands = nbnd
-      s._nplw = s._nkpts * [norb]
+      s._nplws = s._nkpts * [norb]
       s._bands = np.zeros((s._nspin,s._nkpts,nbnd), dtype=np.float64) # energy nspin, nkpts, nbands
       s._occs = np.zeros((s._nspin,s._nkpts,nbnd), dtype=np.float64) # occ nspin, nkpts, nbands
       if s.isGammaWfc():
